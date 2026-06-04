@@ -4,7 +4,40 @@ import axios from "axios";
 function App() {
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
+  const [listening, setListening] = useState(false);
 
+  // 🎤 VOICE INPUT FUNCTION
+  const startListening = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Voice not supported in this browser (use Chrome)");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    recognition.start();
+    setListening(true);
+
+    recognition.onresult = (event) => {
+      const voiceText = event.results[0][0].transcript;
+      setMessage(voiceText);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.onerror = () => {
+      setListening(false);
+    };
+  };
+
+  // 💬 SEND MESSAGE TO BACKEND
   const sendMessage = async () => {
     if (!message) return;
 
@@ -14,9 +47,12 @@ function App() {
     setChat((prev) => [...prev, { sender: "user", text: userMsg }]);
 
     try {
-      const res = await axios.post("https://linguahelp-ai.onrender.com/api/chat/", {
-        message: userMsg,
-      });
+      const res = await axios.post(
+        "https://linguahelp-ai.onrender.com/api/chat/",
+        {
+          message: userMsg,
+        }
+      );
 
       setChat((prev) => [
         ...prev,
@@ -34,6 +70,7 @@ function App() {
     <div style={{ textAlign: "center", fontFamily: "Arial" }}>
       <h2>🧠 LinguaHelp AI Chat</h2>
 
+      {/* CHAT BOX */}
       <div
         style={{
           height: "400px",
@@ -50,8 +87,10 @@ function App() {
           <div
             key={i}
             style={{
-              alignSelf: c.sender === "user" ? "flex-end" : "flex-start",
-              background: c.sender === "user" ? "#4f46e5" : "#e5e7eb",
+              alignSelf:
+                c.sender === "user" ? "flex-end" : "flex-start",
+              background:
+                c.sender === "user" ? "#4f46e5" : "#e5e7eb",
               color: c.sender === "user" ? "white" : "black",
               padding: "10px",
               margin: "5px",
@@ -64,6 +103,7 @@ function App() {
         ))}
       </div>
 
+      {/* INPUT + BUTTONS */}
       <div>
         <input
           value={message}
@@ -71,8 +111,22 @@ function App() {
           placeholder="Ask your doubt..."
           style={{ width: "300px", padding: "10px" }}
         />
+
         <button onClick={sendMessage} style={{ padding: "10px" }}>
           Send
+        </button>
+
+        {/* 🎤 MIC BUTTON */}
+        <button
+          onClick={startListening}
+          style={{
+            padding: "10px",
+            marginLeft: "10px",
+            background: listening ? "red" : "green",
+            color: "white",
+          }}
+        >
+          🎤 {listening ? "Listening..." : "Speak"}
         </button>
       </div>
     </div>
