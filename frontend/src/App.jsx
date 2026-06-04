@@ -14,7 +14,7 @@ function App() {
     setChat((prev) => [...prev, { sender: "user", text: userMsg }]);
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/chat/", {
+      const res = await axios.post("https://linguahelp-ai.onrender.com/api/chat/", {
         message: userMsg,
       });
 
